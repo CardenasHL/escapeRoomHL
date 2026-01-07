@@ -1,0 +1,68 @@
+{
+    "version": "1.0",
+    "rooms": [{
+        "id": "room_1",
+        "name": "Parque del Tesoro",
+        "subtitle": "Un robo... dentro de un juego 🤫",
+        "cast": "Alex, Lola, Pili",
+        "mood": "Aventura y risas",
+        "desc": "La Happy Pandi juega a una búsqueda del tesoro. El MAPA ha sido 'robado' (de mentira) para hacer el reto final más emocionante. Encuentra pistas, recupera el mapa y abre la caja del tesoro.",
+        "items": [
+            { "id": "star", "name": "Pegatina estrella", "icon": "⭐", "value": 100 },
+            { "id": "clip", "name": "Clip metálico", "icon": "🧷", "value": 10 },
+            { "id": "map", "name": "Mapa del tesoro", "icon": "🗺️", "value": 204 }
+        ],
+        "objects": [{
+                "id": "banco",
+                "name": "Banco del parque",
+                "icon": "🪑",
+                "hint": "Mira debajo del banco…",
+                "actions": [
+                    { "type": "addClue", "onceKey": "r1_c1", "text": "Bajo el banco hay una nota: “La caseta guarda lo importante. Pero la caja solo se abre con números secretos.”" },
+                    { "type": "addItem", "itemId": "star", "onceKey": "r1_star" }
+                ]
+            },
+            {
+                "id": "suelo",
+                "name": "Suelo con piedrecitas",
+                "icon": "🪨",
+                "hint": "Algo brilla entre las piedras…",
+                "actions": [
+                    { "type": "addClue", "onceKey": "r1_c2", "text": "Encuentras un papelito: “🧷 vale 10. (Sirve para abrir cierres pequeños)”" },
+                    { "type": "addItem", "itemId": "clip", "onceKey": "r1_clip" }
+                ]
+            },
+            {
+                "id": "mochila",
+                "name": "Mochila del juego",
+                "icon": "🎒",
+                "hint": "Tiene una cremallera atascada",
+                "requiresItem": "clip",
+                "lockedText": "La cremallera está atascada. Pili dice: “Necesitas algo fino, como un clip.”",
+                "actions": [
+                    { "type": "addClue", "onceKey": "r1_c3", "text": "Dentro hay otra nota: “⭐ vale 100. Y el mapa vale 204.”" },
+                    { "type": "addItem", "itemId": "map", "onceKey": "r1_map" }
+                ]
+            },
+            {
+                "id": "caseta",
+                "name": "Caseta de juegos",
+                "icon": "🏠",
+                "hint": "Hay una caja con panel numérico",
+                "requiresItem": "map",
+                "lockedText": "Parece importante, pero sin el mapa no sabes qué estás haciendo aquí.",
+                "actions": [{
+                    "type": "openPuzzle",
+                    "puzzle": {
+                        "type": "sum",
+                        "prompt": "Escribe el código. Pista: ⭐ + 🧷 + 🗺️",
+                        "sumItemIds": ["star", "clip", "map"],
+                        "successTitle": "¡Caja abierta! 🎉",
+                        "successText": "¡Lo lograste! Dentro hay pegatinas del tesoro y una nota. Lola confiesa: “Yo escondí el mapa para que el juego durara más… y se me fue la cabeza.”",
+                        "onSuccess": { "type": "completeRoom" }
+                    }
+                }]
+            }
+        ]
+    }]
+}

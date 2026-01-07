@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Escape Room: Happy Pandi</title>
+    <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+    <div class="bg" aria-hidden="true"></div>
+
+    <header class="topbar">
+        <div class="brand">
+            <div class="logo" aria-hidden="true">🗝️</div>
+            <div>
+                <div class="brand-title">Escape Room: Happy Pandi</div>
+                <div class="brand-subtitle">Explora objetos, junta pistas y abre la salida</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn" id="btnAyuda">🧠 Reglas</button>
+            <button class="btn" id="btnGuardar">💾 Guardar</button>
+            <button class="btn" id="btnReiniciar">🧹 Reiniciar</button>
+        </div>
+    </header>
+
+    <main class="app">
+        <!-- IZQUIERDA: SALA -->
+        <section class="card">
+            <div class="sceneHeader">
+                <div>
+                    <h1 class="h1" id="roomName">Sala</h1>
+                    <div class="muted" id="roomSubtitle"></div>
+                </div>
+                <div class="chips">
+                    <span class="chip" id="chipRoom">🏠 Sala 1/1</span>
+                    <span class="chip">🎯 Objetivo: abrir la caja</span>
+                </div>
+            </div>
+
+            <div class="roomArt">
+                <div class="roomTitle" id="roomTitle">...</div>
+                <p class="roomDesc" id="roomDesc">...</p>
+
+                <div class="badges">
+                    <span class="badge" id="badgeCast">👧🧒 Personajes: ...</span>
+                    <span class="badge" id="badgeMood">✨ Tono: ...</span>
+                </div>
+            </div>
+
+            <p class="muted">
+                Toca objetos para investigar. Algunos te dan <b>pistas</b>, otros te dan <b>items</b> para el inventario.
+            </p>
+
+            <div class="objects" id="objectsGrid"></div>
+
+            <div class="puzzleBox" id="puzzleBox" style="display:none;">
+                <div class="puzzleTitle">🔒 Panel</div>
+                <div class="muted" id="puzzleHint"></div>
+
+                <div class="puzzleRow">
+                    <input type="text" id="puzzleInput" placeholder="Escribe el código..." autocomplete="off" />
+                    <button class="btn btn-orange" id="btnProbar">Probar</button>
+                </div>
+
+                <div class="muted small" id="puzzleExtra"></div>
+            </div>
+
+            <div class="navRow">
+                <button class="btn btn-primary" id="btnSiguiente" style="display:none;">➡️ Siguiente sala</button>
+            </div>
+        </section>
+
+        <!-- DERECHA: INVENTARIO + PISTAS -->
+        <aside class="card">
+            <div class="sectionHead">
+                <h2 class="h2">🎒 Inventario</h2>
+                <span class="badge" id="invCount">0 objetos</span>
+            </div>
+            <div class="inventory" id="inventory"></div>
+
+            <div class="spacer"></div>
+
+            <div class="sectionHead">
+                <h2 class="h2">🧩 Pistas</h2>
+                <span class="badge" id="clueCount">0 pistas</span>
+            </div>
+            <ol class="clues" id="clues"></ol>
+
+            <div class="spacer"></div>
+
+            <div class="sectionHead">
+                <h2 class="h2">🚪 Progreso</h2>
+            </div>
+            <div class="muted" id="progressText">...</div>
+        </aside>
+    </main>
+
+    <!-- Modal Reglas -->
+    <dialog id="modalAyuda">
+        <div class="modalCard">
+            <div class="modalHead">
+                <h3 class="h3">🧠 Reglas del Escape</h3>
+                <button class="btn" id="btnCerrarAyuda">✖️</button>
+            </div>
+            <div class="modalBody">
+                <p>
+                    1) Explora tocando objetos para encontrar <b>pistas</b> y <b>items</b>.<br> 2) Algunos puzzles necesitan items del inventario.<br> 3) No hay reloj: piensa con calma. Si fallas, ¡no pasa nada!
+                </p>
+            </div>
+            <div class="modalActions">
+                <button class="btn btn-primary btn-big" id="btnEntendido">¡Entendido!</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Modal Mensajes -->
+    <dialog id="modalMsg">
+        <div class="modalCard">
+            <div class="modalHead">
+                <h3 class="h3" id="modalTitle">Mensaje</h3>
+                <button class="btn" id="btnCerrarMsg">✖️</button>
+            </div>
+            <div class="modalBody" id="modalBody"></div>
+            <div class="modalActions">
+                <button class="btn btn-primary" id="btnOkMsg">OK</button>
+            </div>
+        </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="./app.js" defer></script>
+</body>
+
+</html>
