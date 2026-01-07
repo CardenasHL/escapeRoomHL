@@ -1,4 +1,4 @@
-var STORAGE_KEY = "escape_happypandi_save_v1";
+var STORAGE_KEY = "escape_happypandi_save_v2";
 
 function $(id) { return document.getElementById(id); }
 
@@ -29,13 +29,11 @@ function showMessage(title, html) {
 
 var gameData = null;
 
-// Estado
+// Estado global (persistente)
 var state = {
     roomIndex: 0,
-    inventory: {}, // itemId -> true
-    clues: [], // array strings
-    flags: {}, // onceKeys
-    solved: {} // roomId -> true
+    solved: {}, // roomId -> true
+    rooms: {} // roomId -> { inventory: {}, clues: [], flags: {}, activeItem: "" }
 };
 
 var currentPuzzle = null;
@@ -57,6 +55,13 @@ function getRoom() {
     return gameData.rooms[state.roomIndex] || null;
 }
 
+function getRoomState(roomId) {
+    if (!state.rooms[roomId]) {
+        state.rooms[roomId] = { inventory: {}, clues: [], flags: {}, activeItem: "" };
+    }
+    return state.rooms[roomId];
+}
+
 function getItemDef(room, itemId) {
     var items = (room && room.items) ? room.items : [];
     for (var i = 0; i < items.length; i++) {
@@ -65,22 +70,34 @@ function getItemDef(room, itemId) {
     return null;
 }
 
-function hasItem(itemId) {
-    return !!state.inventory[itemId];
+function hasItem(room, itemId) {
+    var rs = getRoomState(room.id);
+    return !!rs.inventory[itemId];
 }
 
 function addItem(room, itemId) {
-    if (hasItem(itemId)) return;
+    var rs = getRoomState(room.id);
+    if (rs.inventory[itemId]) return;
+
     var def = getItemDef(room, itemId);
     if (!def) return;
-    state.inventory[itemId] = true;
+
+    rs.inventory[itemId] = true;
     toast("Nuevo objeto: " + def.name);
 }
 
-function addClueOnce(onceKey, text) {
-    if (state.flags[onceKey]) return;
-    state.flags[onceKey] = true;
-    state.clues.push(text);
+function addItemOnce(room, key, itemId) {
+    var rs = getRoomState(room.id);
+    if (rs.flags[key]) return;
+    rs.flags[key] = true;
+    addItem(room, itemId);
+}
+
+function addClueOnce(room, key, text) {
+    var rs = getRoomState(room.id);
+    if (rs.flags[key]) return;
+    rs.flags[key] = true;
+    rs.clues.push(text);
     toast("Nueva pista ✨");
 }
 
@@ -88,10 +105,27 @@ function completeRoom(roomId) {
     state.solved[roomId] = true;
 }
 
+function setActiveItem(room, itemId) {
+    var rs = getRoomState(room.id);
+    if (itemId && !hasItem(room, itemId)) return;
+    rs.activeItem = itemId || "";
+}
+
+function clearActiveItem(room) {
+    setActiveItem(room, "");
+}
+
+function getActiveItem(room) {
+    var rs = getRoomState(room.id);
+    return rs.activeItem || "";
+}
+
+/* --------- Puzzle engine --------- */
+
 function showPuzzle(puzzle, room) {
     $("puzzleBox").style.display = "block";
     $("puzzleHint").textContent = puzzle.prompt || "Escribe el código";
-    $("puzzleExtra").textContent = "Consejo: escribe solo números/letras, sin espacios.";
+    $("puzzleExtra").textContent = "Consejo: sin espacios. Si es suma, usa los valores descubiertos.";
     $("puzzleInput").value = "";
     currentPuzzle = { puzzle: puzzle, room: room };
     setTimeout(function() { $("puzzleInput").focus(); }, 50);
@@ -107,11 +141,15 @@ function computeSumPuzzleAnswer(puzzle, room) {
     var ids = puzzle.sumItemIds || [];
     for (var i = 0; i < ids.length; i++) {
         var def = getItemDef(room, ids[i]);
-        if (def && typeof def.value === "number") {
-            sum += def.value;
-        }
+        if (def && typeof def.value === "number") sum += def.value;
     }
     return String(sum);
+}
+
+function normalizeInput(s) {
+    s = (s || "").toString();
+    s = s.replace(/\s+/g, "");
+    return s.toUpperCase();
 }
 
 function tryPuzzle() {
@@ -120,18 +158,16 @@ function tryPuzzle() {
     var puzzle = currentPuzzle.puzzle;
     var room = currentPuzzle.room;
 
-    var input = $("puzzleInput").value;
-    input = (input || "").toString().replace(/\s+/g, "").toUpperCase();
-
+    var input = normalizeInput($("puzzleInput").value);
     var expected = "";
+
     if (puzzle.type === "sum") {
-        expected = computeSumPuzzleAnswer(puzzle, room).toUpperCase();
+        expected = normalizeInput(computeSumPuzzleAnswer(puzzle, room));
     } else {
-        expected = String(puzzle.answer || "").toUpperCase();
+        expected = normalizeInput(puzzle.answer || "");
     }
 
     if (input === expected) {
-        // onSuccess
         if (puzzle.onSuccess && puzzle.onSuccess.type === "completeRoom") {
             completeRoom(room.id);
         }
@@ -143,59 +179,114 @@ function tryPuzzle() {
     }
 }
 
-function runActions(obj, room) {
-    var actions = obj.actions || [];
-    for (var i = 0; i < actions.length; i++) {
-        var a = actions[i];
+/* --------- Actions from JSON --------- */
 
-        if (a.type === "addClue") {
-            addClueOnce(a.onceKey || (obj.id + "_clue_" + i), a.text || "");
-        }
+function runAction(room, action) {
+    if (!action || !action.type) return;
 
-        if (a.type === "addItem") {
-            if (a.onceKey) {
-                if (state.flags[a.onceKey]) continue;
-                state.flags[a.onceKey] = true;
-            }
-            addItem(room, a.itemId);
-        }
+    if (action.type === "addClueOnce") {
+        addClueOnce(room, action.key || ("clue_" + Math.random()), action.text || "");
+    }
 
-        if (a.type === "openPuzzle") {
-            showPuzzle(a.puzzle, room);
-        }
+    if (action.type === "addItemOnce") {
+        addItemOnce(room, action.key || ("item_" + Math.random()), action.itemId);
+    }
+
+    if (action.type === "showMsg") {
+        showMessage(action.title || "Mensaje", action.html || "");
+    }
+
+    if (action.type === "openPuzzle") {
+        showPuzzle(action.puzzle, room);
+    }
+
+    if (action.type === "completeRoom") {
+        completeRoom(room.id);
     }
 }
 
-function onObjectClick(obj) {
+function runActions(room, actions) {
+    if (!actions) return;
+    for (var i = 0; i < actions.length; i++) {
+        runAction(room, actions[i]);
+    }
+}
+
+function matchInteraction(interaction, room, activeItemId) {
+    if (!interaction || !interaction.when) return false;
+
+    var w = interaction.when;
+
+    // Inspect
+    if (w.type === "inspect") {
+        return !activeItemId;
+    }
+
+    // Use item
+    if (w.type === "useItem") {
+        return !!activeItemId && activeItemId === w.itemId;
+    }
+
+    return false;
+}
+
+function onObjectPressed(obj) {
     var room = getRoom();
     if (!room) return;
 
-    // Requires item?
-    if (obj.requiresItem && !hasItem(obj.requiresItem)) {
-        showMessage("Bloqueado", obj.lockedText || "Necesitas un objeto del inventario.");
+    var rs = getRoomState(room.id);
+    var activeItemId = rs.activeItem || "";
+
+    // Choose appropriate interaction
+    var interactions = obj.interactions || [];
+    var selected = null;
+
+    for (var i = 0; i < interactions.length; i++) {
+        if (matchInteraction(interactions[i], room, activeItemId)) {
+            selected = interactions[i];
+            break;
+        }
+    }
+
+    if (!selected) {
+        // If user tried to use an item but no matching interaction, give friendly feedback
+        if (activeItemId) {
+            var itemDef = getItemDef(room, activeItemId);
+            var itemName = itemDef ? itemDef.name : "ese objeto";
+            showMessage("No funciona", "Usar <b>" + itemName + "</b> aquí no ayuda. Prueba otro objeto o toca sin item para mirar.");
+        } else {
+            showMessage("Nada nuevo", "No encuentras nada especial aquí… por ahora.");
+        }
         return;
     }
 
-    runActions(obj, room);
+    runActions(room, selected.actions || []);
+
+    // After using an item, we keep it active (kids like it), but you can auto-clear if you prefer:
+    // clearActiveItem(room);
+
     updateUI();
 }
+
+/* --------- UI --------- */
 
 function updateUI() {
     var room = getRoom();
     if (!room) return;
 
+    var rs = getRoomState(room.id);
+
     $("roomName").textContent = "🧩 " + room.name;
     $("roomSubtitle").textContent = room.subtitle || "";
-
     $("roomTitle").textContent = room.name;
-    $("roomDesc").textContent = room.desc;
-
+    $("roomDesc").textContent = room.desc || "";
     $("badgeCast").textContent = "👧🧒 Personajes: " + (room.cast || "");
     $("badgeMood").textContent = "✨ Tono: " + (room.mood || "");
 
     $("chipRoom").textContent = "🏠 Sala " + (state.roomIndex + 1) + "/" + (gameData.rooms.length);
+    $("chipGoal").textContent = "🎯 Objetivo: " + (room.goal || "escapar");
 
-    // Objects
+    // Objects render
     var grid = $("objectsGrid");
     grid.innerHTML = "";
     var objects = room.objects || [];
@@ -210,54 +301,78 @@ function updateUI() {
                 '<div class="objName">' + obj.name + '</div>' +
                 '<div class="objHint">' + obj.hint + '</div>' +
                 '</div>';
-            b.addEventListener("click", function() { onObjectClick(obj); });
+            b.addEventListener("click", function() { onObjectPressed(obj); });
             grid.appendChild(b);
         })(objects[i]);
     }
 
-    // Inventory
+    // Inventory render (clickable to set active item)
     var inv = $("inventory");
     inv.innerHTML = "";
     var invCount = 0;
+
     var items = room.items || [];
     for (var j = 0; j < items.length; j++) {
-        if (state.inventory[items[j].id]) {
+        var it = items[j];
+        if (rs.inventory[it.id]) {
             invCount++;
-            var div = document.createElement("div");
-            div.className = "item";
-            div.innerHTML =
-                '<div class="itemIcon" aria-hidden="true">' + items[j].icon + '</div>' +
-                '<div>' + items[j].name + '</div>';
-            inv.appendChild(div);
+            (function(itemDef) {
+                var btn = document.createElement("button");
+                btn.className = "item" + ((rs.activeItem === itemDef.id) ? " active" : "");
+                btn.type = "button";
+                btn.innerHTML =
+                    '<div class="itemIcon" aria-hidden="true">' + itemDef.icon + '</div>' +
+                    '<div>' + itemDef.name + '</div>';
+                btn.addEventListener("click", function() {
+                    if (rs.activeItem === itemDef.id) {
+                        rs.activeItem = "";
+                    } else {
+                        rs.activeItem = itemDef.id;
+                    }
+                    updateUI();
+                });
+                inv.appendChild(btn);
+            })(it);
         }
     }
     $("invCount").textContent = invCount + (invCount === 1 ? " objeto" : " objetos");
 
-    // Clues
-    var clues = $("clues");
-    clues.innerHTML = "";
-    for (var c = 0; c < state.clues.length; c++) {
-        var li = document.createElement("li");
-        li.textContent = state.clues[c];
-        clues.appendChild(li);
+    // Active item bar
+    var active = rs.activeItem || "";
+    if (active) {
+        var def = getItemDef(room, active);
+        $("activeItemText").textContent = def ? (def.icon + " " + def.name) : "Item activo";
+    } else {
+        $("activeItemText").textContent = "Ninguno (toca un item)";
     }
-    $("clueCount").textContent = state.clues.length + (state.clues.length === 1 ? " pista" : " pistas");
+
+    // Clues
+    var cluesEl = $("clues");
+    cluesEl.innerHTML = "";
+    for (var c = 0; c < rs.clues.length; c++) {
+        var li = document.createElement("li");
+        li.textContent = rs.clues[c];
+        cluesEl.appendChild(li);
+    }
+    $("clueCount").textContent = rs.clues.length + (rs.clues.length === 1 ? " pista" : " pistas");
 
     // Progress
-    var totalRooms = gameData.rooms.length;
+    var total = gameData.rooms.length;
     var solvedCount = 0;
     for (var k in state.solved) {
         if (state.solved.hasOwnProperty(k) && state.solved[k]) solvedCount++;
     }
-    $("progressText").textContent = "Salas completadas: " + solvedCount + "/" + totalRooms;
+    $("progressText").textContent = "Salas completadas: " + solvedCount + "/" + total + (solvedCount === total ? " — ¡Has escapado!" : "");
 
     // Next button
-    if (state.solved[room.id] && state.roomIndex < totalRooms - 1) {
+    if (state.solved[room.id] && state.roomIndex < total - 1) {
         $("btnSiguiente").style.display = "inline-block";
     } else {
         $("btnSiguiente").style.display = "none";
     }
 }
+
+/* --------- Save/Load/Reset --------- */
 
 function saveGame() {
     try {
@@ -275,11 +390,9 @@ function loadGame() {
         var parsed = JSON.parse(raw);
         if (parsed && typeof parsed === "object") {
             state = parsed;
-            if (!state.inventory) state.inventory = {};
-            if (!state.clues) state.clues = [];
-            if (!state.flags) state.flags = {};
-            if (!state.solved) state.solved = {};
             if (typeof state.roomIndex !== "number") state.roomIndex = 0;
+            if (!state.solved) state.solved = {};
+            if (!state.rooms) state.rooms = {};
             return true;
         }
     } catch (_e) {}
@@ -288,7 +401,7 @@ function loadGame() {
 
 function resetGame() {
     try { localStorage.removeItem(STORAGE_KEY); } catch (_e) {}
-    state = { roomIndex: 0, inventory: {}, clues: [], flags: {}, solved: {} };
+    state = { roomIndex: 0, solved: {}, rooms: {} };
     hidePuzzle();
     updateUI();
     toast("Reiniciado 🧹");
@@ -305,12 +418,11 @@ function goNextRoom() {
 
     state.roomIndex++;
     hidePuzzle();
-    state.clues = [];
-    state.inventory = {};
-    state.flags = {};
     updateUI();
     toast("Nueva sala 🏠");
 }
+
+/* --------- Wire UI --------- */
 
 function wireUI() {
     $("btnAyuda").addEventListener("click", function() { openModal("modalAyuda"); });
@@ -341,11 +453,19 @@ function wireUI() {
     });
 
     $("btnSiguiente").addEventListener("click", goNextRoom);
+
+    $("btnClearActive").addEventListener("click", function() {
+        var room = getRoom();
+        if (!room) return;
+        clearActiveItem(room);
+        updateUI();
+    });
 }
+
+/* --------- Init --------- */
 
 (function init() {
     wireUI();
-
     loadData().then(function() {
         var loaded = loadGame();
         if (!loaded) {

@@ -1,68 +1,261 @@
 {
     "version": "1.0",
     "rooms": [{
-        "id": "room_1",
-        "name": "Parque del Tesoro",
-        "subtitle": "Un robo... dentro de un juego 🤫",
-        "cast": "Alex, Lola, Pili",
-        "mood": "Aventura y risas",
-        "desc": "La Happy Pandi juega a una búsqueda del tesoro. El MAPA ha sido 'robado' (de mentira) para hacer el reto final más emocionante. Encuentra pistas, recupera el mapa y abre la caja del tesoro.",
-        "items": [
-            { "id": "star", "name": "Pegatina estrella", "icon": "⭐", "value": 100 },
-            { "id": "clip", "name": "Clip metálico", "icon": "🧷", "value": 10 },
-            { "id": "map", "name": "Mapa del tesoro", "icon": "🗺️", "value": 204 }
-        ],
-        "objects": [{
-                "id": "banco",
-                "name": "Banco del parque",
-                "icon": "🪑",
-                "hint": "Mira debajo del banco…",
-                "actions": [
-                    { "type": "addClue", "onceKey": "r1_c1", "text": "Bajo el banco hay una nota: “La caseta guarda lo importante. Pero la caja solo se abre con números secretos.”" },
-                    { "type": "addItem", "itemId": "star", "onceKey": "r1_star" }
-                ]
-            },
-            {
-                "id": "suelo",
-                "name": "Suelo con piedrecitas",
-                "icon": "🪨",
-                "hint": "Algo brilla entre las piedras…",
-                "actions": [
-                    { "type": "addClue", "onceKey": "r1_c2", "text": "Encuentras un papelito: “🧷 vale 10. (Sirve para abrir cierres pequeños)”" },
-                    { "type": "addItem", "itemId": "clip", "onceKey": "r1_clip" }
-                ]
-            },
-            {
-                "id": "mochila",
-                "name": "Mochila del juego",
-                "icon": "🎒",
-                "hint": "Tiene una cremallera atascada",
-                "requiresItem": "clip",
-                "lockedText": "La cremallera está atascada. Pili dice: “Necesitas algo fino, como un clip.”",
-                "actions": [
-                    { "type": "addClue", "onceKey": "r1_c3", "text": "Dentro hay otra nota: “⭐ vale 100. Y el mapa vale 204.”" },
-                    { "type": "addItem", "itemId": "map", "onceKey": "r1_map" }
-                ]
-            },
-            {
-                "id": "caseta",
-                "name": "Caseta de juegos",
-                "icon": "🏠",
-                "hint": "Hay una caja con panel numérico",
-                "requiresItem": "map",
-                "lockedText": "Parece importante, pero sin el mapa no sabes qué estás haciendo aquí.",
-                "actions": [{
-                    "type": "openPuzzle",
-                    "puzzle": {
-                        "type": "sum",
-                        "prompt": "Escribe el código. Pista: ⭐ + 🧷 + 🗺️",
-                        "sumItemIds": ["star", "clip", "map"],
-                        "successTitle": "¡Caja abierta! 🎉",
-                        "successText": "¡Lo lograste! Dentro hay pegatinas del tesoro y una nota. Lola confiesa: “Yo escondí el mapa para que el juego durara más… y se me fue la cabeza.”",
-                        "onSuccess": { "type": "completeRoom" }
-                    }
-                }]
-            }
-        ]
-    }]
+            "id": "room_1",
+            "name": "Parque del Tesoro",
+            "subtitle": "Un robo... dentro de un juego 🤫",
+            "cast": "Alex, Lola, Pili",
+            "mood": "Aventura y risas",
+            "goal": "Abrir la caja del tesoro",
+            "desc": "La Happy Pandi juega a una búsqueda del tesoro. El mapa ha sido 'robado' (de mentira) para hacer el reto final más emocionante. Encuentra el mapa y abre la caja.",
+            "items": [
+                { "id": "star", "name": "Pegatina estrella", "icon": "⭐", "value": 100 },
+                { "id": "clip", "name": "Clip metálico", "icon": "🧷", "value": 10 },
+                { "id": "map", "name": "Mapa del tesoro", "icon": "🗺️", "value": 204 }
+            ],
+            "objects": [{
+                    "id": "banco",
+                    "name": "Banco del parque",
+                    "icon": "🪑",
+                    "hint": "Algo se ve debajo…",
+                    "interactions": [{
+                        "when": { "type": "inspect" },
+                        "actions": [
+                            { "type": "addClueOnce", "key": "r1_c1", "text": "Bajo el banco hay una nota: “La caseta guarda lo importante. Pero la caja solo se abre con números secretos.”" },
+                            { "type": "addItemOnce", "key": "r1_star", "itemId": "star" }
+                        ]
+                    }]
+                },
+                {
+                    "id": "piedras",
+                    "name": "Piedrecitas brillantes",
+                    "icon": "🪨",
+                    "hint": "Hay algo metálico…",
+                    "interactions": [{
+                        "when": { "type": "inspect" },
+                        "actions": [
+                            { "type": "addClueOnce", "key": "r1_c2", "text": "Encuentras un papelito: “🧷 vale 10. (Sirve para abrir cierres pequeños)”" },
+                            { "type": "addItemOnce", "key": "r1_clip", "itemId": "clip" }
+                        ]
+                    }]
+                },
+                {
+                    "id": "mochila",
+                    "name": "Mochila del juego",
+                    "icon": "🎒",
+                    "hint": "La cremallera parece atascada",
+                    "interactions": [{
+                            "when": { "type": "inspect" },
+                            "actions": [
+                                { "type": "showMsg", "title": "Mochila cerrada", "html": "La cremallera está atascada. <b>Pili</b>: “Necesitamos algo fino para abrirla…”" }
+                            ]
+                        },
+                        {
+                            "when": { "type": "useItem", "itemId": "clip" },
+                            "actions": [
+                                { "type": "addClueOnce", "key": "r1_c3", "text": "Dentro hay otra nota: “⭐ vale 100. Y el mapa vale 204.”" },
+                                { "type": "addItemOnce", "key": "r1_map", "itemId": "map" },
+                                { "type": "showMsg", "title": "¡Se abrió!", "html": "El clip encaja perfecto y la cremallera se abre. ¡Encuentras el mapa!" }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "caseta",
+                    "name": "Caseta de juegos",
+                    "icon": "🏠",
+                    "hint": "Hay una caja con panel",
+                    "interactions": [{
+                            "when": { "type": "inspect" },
+                            "actions": [
+                                { "type": "showMsg", "title": "Caja cerrada", "html": "La caja tiene un panel numérico. <b>Pili</b>: “Parece una suma secreta…”" }
+                            ]
+                        },
+                        {
+                            "when": { "type": "useItem", "itemId": "map" },
+                            "actions": [{
+                                "type": "openPuzzle",
+                                "puzzle": {
+                                    "type": "sum",
+                                    "prompt": "Escribe el código. Pista: ⭐ + 🧷 + 🗺️",
+                                    "sumItemIds": ["star", "clip", "map"],
+                                    "successTitle": "¡Caja abierta! 🎉",
+                                    "successText": "¡Lo lograste! Dentro hay pegatinas del tesoro y una nota. <b>Lola</b>: “Yo escondí el mapa para que el juego durara más… y se me fue la cabeza.”",
+                                    "onSuccess": { "type": "completeRoom" }
+                                }
+                            }]
+                        }
+                    ]
+                }
+            ]
+        },
+
+        {
+            "id": "room_2",
+            "name": "Biblioteca del Libro Misterioso",
+            "subtitle": "Un crimen… ¡en un libro! (ficticio) 📚",
+            "cast": "Victoria, Michael, Pili",
+            "mood": "Misterio literario",
+            "goal": "Recuperar la última página",
+            "desc": "Leen un libro de misterio (inventado). Falta la última página y sin ella no se puede saber el final. Alguien la escondió para hacer un reto: resolver antes de leer.",
+            "items": [
+                { "id": "clip2", "name": "Clip (otra vez)", "icon": "🧷", "value": 0 },
+                { "id": "page", "name": "Última página", "icon": "📄", "value": 0 },
+                { "id": "keycard", "name": "Tarjeta de salida", "icon": "🪪", "value": 0 }
+            ],
+            "objects": [{
+                    "id": "estanteria",
+                    "name": "Estantería",
+                    "icon": "📚",
+                    "hint": "Un hueco raro entre libros",
+                    "interactions": [{
+                        "when": { "type": "inspect" },
+                        "actions": [
+                            { "type": "addClueOnce", "key": "r2_c1", "text": "Una nota dice: “Si quieres abrir un cierre pequeño… un clip te salva.”" },
+                            { "type": "addItemOnce", "key": "r2_clip", "itemId": "clip2" }
+                        ]
+                    }]
+                },
+                {
+                    "id": "mesa",
+                    "name": "Mesa de lectura",
+                    "icon": "📝",
+                    "hint": "Hay un dibujo de un cajón",
+                    "interactions": [{
+                        "when": { "type": "inspect" },
+                        "actions": [
+                            { "type": "addClueOnce", "key": "r2_c2", "text": "En un papel: “La última página está guardada donde se devuelven los libros.”" }
+                        ]
+                    }]
+                },
+                {
+                    "id": "mostrador",
+                    "name": "Mostrador",
+                    "icon": "🧾",
+                    "hint": "Cajón con cierre pequeño",
+                    "interactions": [{
+                            "when": { "type": "inspect" },
+                            "actions": [
+                                { "type": "showMsg", "title": "Cajón cerrado", "html": "El cierre es pequeño. <b>Pili</b>: “Esto pide un clip…”" }
+                            ]
+                        },
+                        {
+                            "when": { "type": "useItem", "itemId": "clip2" },
+                            "actions": [
+                                { "type": "addItemOnce", "key": "r2_page", "itemId": "page" },
+                                { "type": "showMsg", "title": "¡Encontrada!", "html": "<b>Michael</b>: “La escondí para que jugáramos a adivinar el final… ¡pero me pasé!”" },
+                                { "type": "addClueOnce", "key": "r2_c3", "text": "La página tiene una pista extra: “Si tienes el final… pide la tarjeta a Pili.”" }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "pili",
+                    "name": "Pili",
+                    "icon": "🤖",
+                    "hint": "Te ayuda si le das la página",
+                    "interactions": [{
+                            "when": { "type": "inspect" },
+                            "actions": [
+                                { "type": "showMsg", "title": "Pili dice:", "html": "“Si consigues la última página, puedo darte la tarjeta de salida.”" }
+                            ]
+                        },
+                        {
+                            "when": { "type": "useItem", "itemId": "page" },
+                            "actions": [
+                                { "type": "addItemOnce", "key": "r2_keycard", "itemId": "keycard" },
+                                { "type": "showMsg", "title": "Tarjeta conseguida", "html": "Pili analiza la página y te entrega una tarjeta de salida. “Buen trabajo, detective.”" }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "puerta",
+                    "name": "Puerta de salida",
+                    "icon": "🚪",
+                    "hint": "Necesita tarjeta",
+                    "interactions": [{
+                            "when": { "type": "inspect" },
+                            "actions": [
+                                { "type": "showMsg", "title": "Cerrada", "html": "Hay un lector de tarjeta. Necesitas una tarjeta de salida." }
+                            ]
+                        },
+                        {
+                            "when": { "type": "useItem", "itemId": "keycard" },
+                            "actions": [
+                                { "type": "completeRoom" },
+                                { "type": "showMsg", "title": "¡Sala superada! 🎉", "html": "La puerta se abre. <b>Victoria</b>: “¡Siguiente sala!”" }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+
+        {
+            "id": "room_3",
+            "name": "Laboratorio: El Panel de Colores",
+            "subtitle": "Ciencia + puzzle final 🔬",
+            "cast": "Ana, Tao, Pili",
+            "mood": "Ciencia divertida",
+            "goal": "Abrir la puerta final",
+            "desc": "En el laboratorio hay un panel con colores. Alguien lo cambió para crear un reto. Encuentra la tarjeta y activa el orden correcto.",
+            "items": [
+                { "id": "card", "name": "Tarjeta de acceso", "icon": "🪪", "value": 0 }
+            ],
+            "objects": [{
+                    "id": "caja",
+                    "name": "Caja de herramientas",
+                    "icon": "🧰",
+                    "hint": "Algo brilla dentro",
+                    "interactions": [{
+                        "when": { "type": "inspect" },
+                        "actions": [
+                            { "type": "addClueOnce", "key": "r3_c1", "text": "Nota: “Orden correcto: AZUL → AMARILLO → ROSA (AAR)”" },
+                            { "type": "addItemOnce", "key": "r3_card", "itemId": "card" }
+                        ]
+                    }]
+                },
+                {
+                    "id": "panel",
+                    "name": "Panel de colores",
+                    "icon": "🎛️",
+                    "hint": "Necesita tarjeta + código",
+                    "interactions": [{
+                            "when": { "type": "inspect" },
+                            "actions": [
+                                { "type": "showMsg", "title": "Panel", "html": "Hay un lector de tarjeta y un teclado. <b>Pili</b>: “Tarjeta primero… luego el orden.”" }
+                            ]
+                        },
+                        {
+                            "when": { "type": "useItem", "itemId": "card" },
+                            "actions": [{
+                                "type": "openPuzzle",
+                                "puzzle": {
+                                    "type": "answer",
+                                    "prompt": "Escribe el orden como letras (AAR). Pista: AZUL → AMARILLO → ROSA",
+                                    "answer": "AAR",
+                                    "successTitle": "¡Puerta final abierta! 🥳",
+                                    "successText": "¡Escapaste! <b>Pili</b>: “Informe final: cerebro brillante detectado.”",
+                                    "onSuccess": { "type": "completeRoom" }
+                                }
+                            }]
+                        }
+                    ]
+                },
+                {
+                    "id": "pili3",
+                    "name": "Pili",
+                    "icon": "🤖",
+                    "hint": "Te resume el objetivo",
+                    "interactions": [{
+                        "when": { "type": "inspect" },
+                        "actions": [
+                            { "type": "showMsg", "title": "Pili dice:", "html": "Objetivo: consigue una tarjeta en la caja y úsala en el panel." }
+                        ]
+                    }]
+                }
+            ]
+        }
+    ]
 }

@@ -35,7 +35,7 @@ body {
     position: fixed;
     inset: 0;
     z-index: -1;
-    background: radial-gradient(900px 500px at 15% 10%, rgba(255, 209, 102, .40), transparent 60%), radial-gradient(800px 500px at 85% 15%, rgba(140, 122, 230, .22), transparent 60%), linear-gradient(180deg, #F5F9FF 0%, #F2F7FF 55%, #F8FBFF 100%);
+    background: radial-gradient(900px 500px at 15% 10%, rgba(255, 209, 102, .40), transparent 60%), radial-gradient(800px 500px at 85% 15%, rgba(239, 121, 138, .20), transparent 60%), radial-gradient(900px 600px at 70% 85%, rgba(140, 122, 230, .22), transparent 60%), linear-gradient(180deg, #F5F9FF 0%, #F2F7FF 55%, #F8FBFF 100%);
 }
 
 .topbar {
@@ -103,6 +103,12 @@ body {
 .btn:active {
     transform: translateY(6px);
     box-shadow: 0 4px 0 rgba(31, 42, 68, .10);
+}
+
+.btn-mini {
+    padding: .55rem .75rem;
+    border-radius: 1.2rem;
+    box-shadow: 0 8px 0 rgba(31, 42, 68, .10);
 }
 
 .btn-primary {
@@ -229,6 +235,21 @@ body {
     white-space: nowrap;
 }
 
+.hintLine {
+    display: flex;
+    gap: .6rem;
+    align-items: flex-start;
+    margin: .4rem 0 .8rem;
+    padding: .75rem .85rem;
+    border-radius: 1.4rem;
+    background: rgba(245, 249, 255, .96);
+    box-shadow: 0 10px 18px rgba(31, 42, 68, .08);
+}
+
+.hintEmoji {
+    font-size: 1.2rem;
+}
+
 .objects {
     margin-top: 1rem;
     display: grid;
@@ -294,14 +315,43 @@ body {
     flex-wrap: wrap;
 }
 
+.activeItemBar {
+    margin-top: .65rem;
+    padding: .7rem .8rem;
+    border-radius: 1.4rem;
+    background: rgba(245, 249, 255, .96);
+    box-shadow: 0 10px 18px rgba(31, 42, 68, .08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .8rem;
+}
+
+.activeItemLeft {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+
+.activePill {
+    display: inline-flex;
+    width: fit-content;
+    border-radius: 999px;
+    padding: .25rem .6rem;
+    font-weight: 950;
+    background: rgba(140, 122, 230, .14);
+}
+
 .inventory {
     display: flex;
     gap: .6rem;
     flex-wrap: wrap;
-    margin-top: .6rem;
+    margin-top: .7rem;
 }
 
 .item {
+    border: none;
+    cursor: pointer;
     display: flex;
     align-items: center;
     gap: .5rem;
@@ -310,6 +360,15 @@ body {
     background: rgba(245, 249, 255, .96);
     box-shadow: 0 10px 18px rgba(31, 42, 68, .08);
     font-weight: 950;
+}
+
+.item:focus {
+    outline: none;
+    box-shadow: var(--shadow2), var(--ring);
+}
+
+.item.active {
+    background: rgba(255, 209, 102, .35);
 }
 
 .itemIcon {
