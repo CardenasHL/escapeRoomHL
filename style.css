@@ -504,3 +504,88 @@ dialog::backdrop {
     opacity: 1;
     transform: translateX(-50%) translateY(-.25rem);
 }
+/* Mejoras para inventario intuitivo */
+.activeItemBar {
+    padding: .9rem 1rem;
+    border: 3px dashed transparent;
+}
+
+.activeItemBar.has-item {
+    background: rgba(255, 209, 102, .25);
+    border-color: rgba(255, 140, 66, .4);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.activeItemLeft {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+
+.activeItemEmoji {
+    font-size: 2rem;
+    transition: transform 0.3s ease;
+}
+
+.activeItemBar.has-item .activeItemEmoji {
+    animation: bounce 1s ease-in-out infinite;
+}
+
+.activeItemInfo {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+
+.activeItemName {
+    font-weight: 1000;
+    font-size: 1.05rem;
+}
+
+.item {
+    flex-direction: column;
+    min-width: 80px;
+    border: 3px solid transparent;
+    padding: .75rem;
+}
+
+.item.active {
+    background: rgba(255, 209, 102, .4);
+    border-color: rgba(255, 140, 66, .6);
+    box-shadow: 0 15px 30px rgba(255, 140, 66, .3);
+    transform: scale(1.1);
+}
+
+.itemIcon {
+    width: 2.8rem;
+    height: 2.8rem;
+    font-size: 1.6rem;
+}
+
+.item.active .itemIcon {
+    background: rgba(255, 140, 66, .3);
+}
+
+.itemName {
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.progressBar {
+    margin-top: .8rem;
+    height: .8rem;
+    background: rgba(245, 249, 255, .96);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--purple));
+    transition: width 0.5s ease;
+}

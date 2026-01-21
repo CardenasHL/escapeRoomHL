@@ -306,36 +306,60 @@ function updateUI() {
         })(objects[i]);
     }
 
-    // Inventory render (clickable to set active item)
-    var inv = $("inventory");
-    inv.innerHTML = "";
-    var invCount = 0;
+var inv = document.getElementById("inventory");
+inv.innerHTML = "";
+var invCount = 0;
 
-    var items = room.items || [];
-    for (var j = 0; j < items.length; j++) {
-        var it = items[j];
-        if (rs.inventory[it.id]) {
-            invCount++;
-            (function(itemDef) {
-                var btn = document.createElement("button");
-                btn.className = "item" + ((rs.activeItem === itemDef.id) ? " active" : "");
-                btn.type = "button";
-                btn.innerHTML =
-                    '<div class="itemIcon" aria-hidden="true">' + itemDef.icon + '</div>' +
-                    '<div>' + itemDef.name + '</div>';
-                btn.addEventListener("click", function() {
-                    if (rs.activeItem === itemDef.id) {
-                        rs.activeItem = "";
-                    } else {
-                        rs.activeItem = itemDef.id;
-                    }
-                    updateUI();
-                });
-                inv.appendChild(btn);
-            })(it);
-        }
+var items = room.items || [];
+for (var j = 0; j < items.length; j++) {
+    var it = items[j];
+    if (rs.inventory[it.id]) {
+        invCount++;
+        (function(itemDef) {
+            var btn = document.createElement("button");
+            btn.className = "item" + ((rs.activeItem === itemDef.id) ? " active" : "");
+            btn.type = "button";
+            btn.innerHTML =
+                '<div class="itemIcon">' + itemDef.icon + '</div>' +
+                '<div class="itemName">' + itemDef.name + '</div>';
+            btn.addEventListener("click", function() {
+                if (rs.activeItem === itemDef.id) {
+                    rs.activeItem = "";
+                    toast("Has soltado " + itemDef.name);
+                } else {
+                    rs.activeItem = itemDef.id;
+                    toast("¡" + itemDef.name + " en tu mano! 👋");
+                }
+                updateUI();
+            });
+            inv.appendChild(btn);
+        })(it);
     }
-    $("invCount").textContent = invCount + (invCount === 1 ? " objeto" : " objetos");
+}
+document.getElementById("invCount").textContent = invCount + (invCount === 1 ? " objeto" : " objetos");
+
+// Active item bar
+var activeBar = document.getElementById("activeItemBar");
+var active = rs.activeItem || "";
+if (active) {
+    activeBar.classList.add("has-item");
+    var def = getItemDef(room, active);
+    document.getElementById("activeItemEmoji").textContent = def ? def.icon : "👋";
+    document.getElementById("activeItemText").textContent = def ? def.name : "Item activo";
+} else {
+    activeBar.classList.remove("has-item");
+    document.getElementById("activeItemEmoji").textContent = "👋";
+    document.getElementById("activeItemText").textContent = "Nada";
+}
+
+// Progress bar
+var total = gameData.rooms.length;
+var solvedCount = 0;
+for (var k in state.solved) {
+    if (state.solved.hasOwnProperty(k) && state.solved[k]) solvedCount++;
+}
+var progress = (solvedCount / total) * 100;
+document.getElementById("progressFill").style.width = progress + "%";
 
     // Active item bar
     var active = rs.activeItem || "";
